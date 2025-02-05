@@ -1,18 +1,24 @@
-package entity;
+package main.java.ru.kanban.entity;
 
 import java.util.Objects;
 
 public class Task {
     private String name;
     private String description;
-    private final int id;
+    private int id;
     private TaskStatus status;
+
+    public Task(String name, String description, TaskStatus taskStatus) {
+        this.name = name;
+        this.description = description;
+        this.status = taskStatus;
+    }
 
     public Task(String name, String description, int id, TaskStatus taskStatus) {
         this.name = name;
         this.description = description;
-        this.id = id;
         this.status = taskStatus;
+        this.id = id;
     }
 
     public String getName() {
@@ -33,6 +39,10 @@ public class Task {
 
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public TaskStatus getStatus() {
@@ -58,8 +68,7 @@ public class Task {
 
     @Override
     public String toString() {
-        String sampleBody = "\nID = %d\nНаименование задачи: %s\nОписание задачи: %s\nТип задачи: Task";
-        return String.format(sampleBody, id, name, description);
+        return String.format("Task{id=%d, name='%s', description='%s', status=%s}", id, name, description, status);
     }
 
 }
