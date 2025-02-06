@@ -116,8 +116,6 @@ public class TaskManager {
             tasks.get(task.getId()).setName(task.getName());
             tasks.get(task.getId()).setDescription(task.getDescription());
             tasks.get(task.getId()).setStatus(task.getStatus());
-        } else {
-            System.err.println("Объекта с таким ID не существует!");
         }
         return task;
     }
@@ -127,8 +125,6 @@ public class TaskManager {
             epics.get(epic.getId()).setName(epic.getName());
             epics.get(epic.getId()).setDescription(epic.getDescription());
             epics.get(epic.getId()).setStatus(epic.getStatus());
-        } else {
-            System.err.println("Объекта с таким ID не существует!");
         }
         return epic;
     }
@@ -138,19 +134,12 @@ public class TaskManager {
             subtasks.get(subTask.getId()).setName(subTask.getName());
             subtasks.get(subTask.getId()).setDescription(subTask.getDescription());
             subtasks.get(subTask.getId()).setStatus(subTask.getStatus());
-        } else {
-            System.err.println("Объекта с таким ID не существует!");
         }
         return subTask;
     }
 
     public Task deleteTaskById(int id) {
-        if (tasks.get(id) != null) {
-            return tasks.remove(id);
-        } else {
-            System.err.println("Задачи с таким ID не существует!");
-            return null;
-        }
+        return tasks.remove(id);
     }
 
     public Epic deleteEpicById(int id) {
@@ -165,7 +154,6 @@ public class TaskManager {
                 throw new RuntimeException("Подзадачи эпика не были удалены.");
             }
         } else {
-            System.err.println("Эпик с таким ID не найден!");
             return null;
         }
     }
@@ -174,7 +162,6 @@ public class TaskManager {
         if (subtasks.get(id) != null) {
             return subtasks.remove(id);
         } else {
-            System.err.println("Подзадачи с таким ID не существует!");
             return null;
         }
     }
