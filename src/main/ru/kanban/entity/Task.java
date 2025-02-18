@@ -1,4 +1,4 @@
-package main.java.ru.kanban.entity;
+package ru.kanban.entity;
 
 import java.util.Objects;
 
@@ -56,7 +56,7 @@ public class Task {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (obj == null || this.getClass() != obj.getClass()) return false;
+        if (obj == null) return false;
         Task someTask = (Task) obj;
         return this.id == someTask.id;
     }

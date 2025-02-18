@@ -1,4 +1,4 @@
-package main.java.ru.kanban.entity;
+package ru.kanban.entity;
 
 public enum TaskStatus {
     NEW,
