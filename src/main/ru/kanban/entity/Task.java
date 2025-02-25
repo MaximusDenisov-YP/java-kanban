@@ -21,6 +21,13 @@ public class Task {
         this.id = id;
     }
 
+    public Task(Task task) {
+        this.name = task.name;
+        this.description = task.description;
+        this.status = task.status;
+        this.id = task.id;
+    }
+
     public String getName() {
         return name;
     }

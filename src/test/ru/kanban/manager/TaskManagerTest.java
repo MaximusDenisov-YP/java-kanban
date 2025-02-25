@@ -8,6 +8,8 @@ import ru.kanban.entity.Subtask;
 import ru.kanban.entity.Task;
 import ru.kanban.entity.TaskStatus;
 
+import java.util.List;
+
 public class TaskManagerTest {
 
     private TaskManager taskManager;
@@ -15,8 +17,8 @@ public class TaskManagerTest {
 
     @BeforeEach
     void beforeEach() {
-        taskManager = Managers.getDefault();
-        historyManager = Managers.getDefaultHistory();
+        taskManager = new InMemoryTaskManager();
+        historyManager = new InMemoryHistoryManager();
     }
 
     @Test
@@ -25,7 +27,9 @@ public class TaskManagerTest {
         Task task = getTestTask();
         taskManager.postTask(task);
         assertFalse(taskManager.getTasks().isEmpty());
-        assertEquals(task, taskManager.getTaskById(0));
+        assertEquals(task.getName(), taskManager.getTaskById(0).getName());
+        assertEquals(task.getStatus(), taskManager.getTaskById(0).getStatus());
+        assertEquals(task.getDescription(), taskManager.getTaskById(0).getDescription());
     }
 
     @Test
@@ -34,7 +38,9 @@ public class TaskManagerTest {
         Epic epic = getTestEpic();
         taskManager.postEpic(epic);
         assertFalse(taskManager.getEpics().isEmpty());
-        assertEquals(epic, taskManager.getEpicById(0));
+        assertEquals(epic.getName(), taskManager.getEpicById(0).getName());
+        assertEquals(epic.getDescription(), taskManager.getEpicById(0).getDescription());
+        assertEquals(epic.getStatus(), taskManager.getEpicById(0).getStatus());
     }
 
     @Test
@@ -45,7 +51,9 @@ public class TaskManagerTest {
         taskManager.postEpic(epic);
         taskManager.postSubtask(subtask);
         assertFalse(taskManager.getSubtasks().isEmpty());
-        assertEquals(subtask, taskManager.getSubtaskById(1));
+        assertEquals(subtask.getEpic(), taskManager.getSubtaskById(1).getEpic());
+        assertEquals(subtask.getDescription(), taskManager.getSubtaskById(1).getDescription());
+        assertEquals(subtask.getName(), taskManager.getSubtaskById(1).getName());
     }
 
     @Test
@@ -146,7 +154,9 @@ public class TaskManagerTest {
         taskManager.postEpic(epic);
         Subtask subtask = getTestSubtask(epic);
         taskManager.postSubtask(subtask);
-        assertEquals(subtask, taskManager.getSubtaskById(1));
+        assertEquals(subtask.getName(), taskManager.getSubtaskById(1).getName());
+        assertEquals(subtask.getDescription(), taskManager.getSubtaskById(1).getDescription());
+        assertEquals(subtask.getStatus(), taskManager.getSubtaskById(1).getStatus());
         Subtask subtaskToChange = new Subtask("a", "b", epic);
         subtaskToChange.setId(1);
         taskManager.updateSubtask(subtaskToChange);
@@ -189,9 +199,132 @@ public class TaskManagerTest {
         assertEquals(firstTask, thirdTask);
     }
 
+    @Test
+    @DisplayName("Утилитарный класс возвращает корректно инициализированные менеджеры")
+    void utilityClassReturnsInitializedManagers() {
+        TaskManager manager1 = Managers.getDefault();
+        TaskManager manager2 = Managers.getDefault();
+        HistoryManager history1 = Managers.getDefaultHistory();
+        HistoryManager history2 = Managers.getDefaultHistory();
+
+        assertEquals(manager1, manager2, "Ожидается один и тот же экземпляр TaskManager");
+        assertEquals(history1, history2, "Ожидается один и тот же экземпляр HistoryManager");
+    }
+
+    @Test
+    @DisplayName("InMemoryTaskManager добавляет задачи разных типов и находит их по ID")
+    void inMemoryTaskManagerAddsAndFindsTasksById() {
+        Task task = getTestTask();
+        task.setId(123);
+        Epic epic = getTestEpic();
+        epic.setId(111);
+        Subtask subtask = getTestSubtask(epic);
+        subtask.setId(999);
+
+        taskManager.postTask(task);
+        taskManager.postEpic(epic);
+        taskManager.postSubtask(subtask);
+
+        assertEquals(task.getName(), taskManager.getTaskById(123).getName());
+        assertEquals(task.getDescription(), taskManager.getTaskById(123).getDescription());
+        assertEquals(task.getStatus(), taskManager.getTaskById(123).getStatus());
+
+        assertEquals(epic.getName(), taskManager.getEpicById(111).getName());
+        assertEquals(epic.getDescription(), taskManager.getEpicById(111).getDescription());
+        assertEquals(epic.getStatus(), taskManager.getEpicById(111).getStatus());
+
+        assertEquals(subtask.getName(), taskManager.getSubtaskById(999).getName());
+        assertEquals(subtask.getDescription(), taskManager.getSubtaskById(999).getDescription());
+        assertEquals(subtask.getStatus(), taskManager.getSubtaskById(999).getStatus());
+    }
+
+    @Test
+    @DisplayName("Задачи с заданным id и сгенерированным id не конфликтуют в менеджере")
+    void manuallyAssignedIdDoesNotConflictWithGeneratedId() {
+        Task manualTask = new Task("Manual Task", "Assigned ID", TaskStatus.NEW);
+        manualTask.setId(100);
+        taskManager.postTask(manualTask);
+
+        Task autoTask = getTestTask();
+        taskManager.postTask(autoTask);
+
+        assertNotEquals(taskManager.getTaskById(manualTask.getId()), taskManager.getTaskById(autoTask.getId()));
+    }
+
+    @Test
+    @DisplayName("Проверка неизменности задачи при добавлении в менеджер")
+    void taskRemainsUnchangedAfterAddingToManager() {
+        Task originalTask = getTestTask();
+        originalTask.setId(999);
+        taskManager.postTask(originalTask);
+
+        Task retrievedTask = taskManager.getTaskById(originalTask.getId());
+
+        assertEquals(originalTask.getName(), retrievedTask.getName());
+        assertEquals(originalTask.getDescription(), retrievedTask.getDescription());
+        assertEquals(originalTask.getStatus(), retrievedTask.getStatus());
+        assertEquals(originalTask.getId(), retrievedTask.getId());
+    }
+
+    @Test
+    @DisplayName("История сохраняет предыдущие версии задач")
+    void historyManagerSavesPreviousVersionsOfTasks() {
+        // Опустошаем менеджер историй
+        Managers.getDefaultHistory().clearHistory();
+
+        Task task = getTestTask();
+        taskManager.postTask(task);
+        taskManager.getTaskById(task.getId());
+
+        task.setName("Updated Name");
+        task.setDescription("Updated Description");
+        task.setStatus(TaskStatus.IN_PROGRESS);
+
+        List<Task> history = Managers.getDefaultHistory().getHistory();
+        assertEquals(1, history.size(), "Должна быть одна запись в истории");
+
+        Task savedTask = history.get(0);
+        assertNotEquals(task.getName(), savedTask.getName(), "История должна содержать предыдущую версию задачи");
+        assertNotEquals(task.getDescription(), savedTask.getDescription(), "История должна содержать предыдущую версию задачи");
+        assertNotEquals(task.getStatus(), savedTask.getStatus(), "История должна содержать предыдущую версию задачи");
+        assertEquals("Разработка", savedTask.getName(), "Имя должно остаться прежним");
+        assertEquals("Разработать приложение \"Kanban-доска\"", savedTask.getDescription(), "Описание должно остаться прежним");
+        assertEquals(TaskStatus.NEW, savedTask.getStatus(), "Статус должен остаться прежним");
+    }
+
+    @Test
+    @DisplayName("История может хранить только до 10 задач включительно")
+    void historyManagerMakeSavesOnlyTenTasks() {
+        taskManager.postTask(getTestTask());
+        Epic epic = getTestEpic();
+        taskManager.postEpic(epic);
+        taskManager.postSubtask(getTestSubtask(epic));
+
+        for (int i = 0; i < 3; i++) {
+            taskManager.getTaskById(0);
+            taskManager.getEpicById(1);
+            taskManager.getSubtaskById(2);
+        }
+
+        taskManager.getTaskById(0);
+        taskManager.getTaskById(0);
+
+        assertEquals(
+                Managers.getDefaultHistory().getHistory().size(),
+                10,
+                "В истории операции должно быть максимум 10 значений"
+        );
+        assertEquals(
+                1,
+                Managers.getDefaultHistory().getHistory().get(0).getId(),
+                "ID значения должен быть 1, так как задача с 0 ID, после добавления 11-го элемента, должна была удалиться");
+
+    }
+
     private Task getTestTask() {
         return new Task("Разработка", "Разработать приложение \"Kanban-доска\"", TaskStatus.NEW);
     }
+
     private Subtask getTestSubtask(Epic epic) {
         return new Subtask("Написание кода", "Написать код", epic);
     }
