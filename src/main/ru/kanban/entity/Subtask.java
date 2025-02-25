@@ -1,16 +1,21 @@
-package main.java.ru.kanban.entity;
+package ru.kanban.entity;
 
-public class SubTask extends Task {
+public class Subtask extends Task {
     private Epic epic;
 
-    public SubTask(String name, String description, Epic epic) {
+    public Subtask(String name, String description, Epic epic) {
         super(name, description, TaskStatus.NEW);
         this.epic = epic;
     }
 
-    public SubTask(String name, String description, int id, Epic epic) {
+    public Subtask(String name, String description, int id, Epic epic) {
         super(name, description, id, TaskStatus.NEW);
         this.epic = epic;
+    }
+
+    public Subtask(Subtask subtask) {
+        super(subtask.getName(), subtask.getDescription(), subtask.getId(), subtask.getStatus());
+        this.epic = subtask.getEpic();
     }
 
     public Epic getEpic() {
