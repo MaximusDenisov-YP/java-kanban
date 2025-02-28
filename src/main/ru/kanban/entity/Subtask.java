@@ -1,15 +1,15 @@
 package ru.kanban.entity;
 
 public class Subtask extends Task {
-    private Epic epic;
+    private final Epic epic;
 
     public Subtask(String name, String description, Epic epic) {
         super(name, description, TaskStatus.NEW);
         this.epic = epic;
     }
 
-    public Subtask(String name, String description, int id, Epic epic) {
-        super(name, description, id, TaskStatus.NEW);
+    public Subtask(String name, String description, int id, Epic epic, TaskStatus taskStatus) {
+        super(name, description, id, taskStatus);
         this.epic = epic;
     }
 

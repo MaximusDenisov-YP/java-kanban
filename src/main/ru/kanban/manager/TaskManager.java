@@ -48,4 +48,6 @@ public interface TaskManager {
 
     ArrayList<Subtask> getSubtasksFromEpic(Epic epic);
 
+    HistoryManager getHistoryManager();
+
 }
