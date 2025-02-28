@@ -3,21 +3,19 @@ package ru.kanban.manager;
 import ru.kanban.entity.Task;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
 
-    private final List<Task> historyList = new ArrayList<>();
+    private final LinkedList<Task> historyList = new LinkedList<>();
 
     @Override
     public void add(Task task) {
-        Task taskToPut = new Task(task);
-        if (historyList.size() < 10) {
-            historyList.add(taskToPut);
-        } else {
-            historyList.remove(0);
-            historyList.add(task);
+        if (!(historyList.size() < 10)) {
+            historyList.removeFirst();
         }
+        historyList.add(new Task(task));
     }
 
     @Override

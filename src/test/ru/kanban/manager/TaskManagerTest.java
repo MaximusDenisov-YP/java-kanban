@@ -17,8 +17,8 @@ public class TaskManagerTest {
 
     @BeforeEach
     void beforeEach() {
-        taskManager = new InMemoryTaskManager();
-        historyManager = new InMemoryHistoryManager();
+        taskManager = Managers.getDefault();
+        historyManager = taskManager.getHistoryManager();
     }
 
     @Test
@@ -200,18 +200,6 @@ public class TaskManagerTest {
     }
 
     @Test
-    @DisplayName("Утилитарный класс возвращает корректно инициализированные менеджеры")
-    void utilityClassReturnsInitializedManagers() {
-        TaskManager manager1 = Managers.getDefault();
-        TaskManager manager2 = Managers.getDefault();
-        HistoryManager history1 = Managers.getDefaultHistory();
-        HistoryManager history2 = Managers.getDefaultHistory();
-
-        assertEquals(manager1, manager2, "Ожидается один и тот же экземпляр TaskManager");
-        assertEquals(history1, history2, "Ожидается один и тот же экземпляр HistoryManager");
-    }
-
-    @Test
     @DisplayName("InMemoryTaskManager добавляет задачи разных типов и находит их по ID")
     void inMemoryTaskManagerAddsAndFindsTasksById() {
         Task task = getTestTask();
@@ -270,7 +258,7 @@ public class TaskManagerTest {
     @DisplayName("История сохраняет предыдущие версии задач")
     void historyManagerSavesPreviousVersionsOfTasks() {
         // Опустошаем менеджер историй
-        Managers.getDefaultHistory().clearHistory();
+        historyManager.clearHistory();
 
         Task task = getTestTask();
         taskManager.postTask(task);
@@ -280,7 +268,7 @@ public class TaskManagerTest {
         task.setDescription("Updated Description");
         task.setStatus(TaskStatus.IN_PROGRESS);
 
-        List<Task> history = Managers.getDefaultHistory().getHistory();
+        List<Task> history = historyManager.getHistory();
         assertEquals(1, history.size(), "Должна быть одна запись в истории");
 
         Task savedTask = history.get(0);
@@ -310,14 +298,103 @@ public class TaskManagerTest {
         taskManager.getTaskById(0);
 
         assertEquals(
-                Managers.getDefaultHistory().getHistory().size(),
+                historyManager.getHistory().size(),
                 10,
                 "В истории операции должно быть максимум 10 значений"
         );
         assertEquals(
                 1,
-                Managers.getDefaultHistory().getHistory().get(0).getId(),
+                historyManager.getHistory().get(0).getId(),
                 "ID значения должен быть 1, так как задача с 0 ID, после добавления 11-го элемента, должна была удалиться");
+
+    }
+
+    @Test
+    @DisplayName("Проверка всеобъемливающего удаления Subtask")
+    public void checkDeleteSubtasksInAllListAndEpicSubtaskList() {
+        Epic epic = getTestEpic();
+        taskManager.postEpic(epic);
+        Epic epicInMemory = taskManager.getEpicById(0);
+        taskManager.postSubtask(getTestSubtask(epicInMemory));
+        taskManager.postSubtask(new Subtask(
+                "Name",
+                "Description",
+                epicInMemory
+        ));
+        taskManager.postSubtask(new Subtask(
+                "SomeName",
+                "SomeDescription",
+                epicInMemory
+        ));
+        assertEquals(taskManager.getSubtasks().size(), 3);
+        assertEquals(epicInMemory.getSubtaskArrayList().size(), 3);
+
+        taskManager.deleteSubtaskById(3);
+        assertEquals(taskManager.getSubtasks().size(), 2);
+        assertEquals(epicInMemory.getSubtaskArrayList().size(), 2);
+
+        taskManager.deleteAllSubtasks();
+        assertEquals(taskManager.getSubtasks().size(), 0);
+        assertEquals(epicInMemory.getSubtaskArrayList().size(), 0);
+    }
+
+    @Test
+    @DisplayName("Проверка изменения статуса Epic при обновлении и удалении у него Subtask")
+    public void checkStatusEpicWithUpdateAndDeleteHimSubtasks() {
+        Epic epic = getTestEpic();
+        taskManager.postEpic(epic);
+        Epic epicInMemory = taskManager.getEpicById(0);
+        taskManager.postSubtask(getTestSubtask(epicInMemory));
+        taskManager.postSubtask(new Subtask(
+                "Name",
+                "Description",
+                epicInMemory
+        ));
+        taskManager.postSubtask(new Subtask(
+                "SomeName",
+                "SomeDescription",
+                epicInMemory
+        ));
+
+        assertEquals(epicInMemory.getStatus(), TaskStatus.NEW);
+
+        for(Subtask subtask : epicInMemory.getSubtaskArrayList()) {
+            subtask.setStatus(TaskStatus.DONE);
+        }
+
+        assertEquals(epicInMemory.getStatus(), TaskStatus.DONE);
+
+        for(Subtask subtask : epicInMemory.getSubtaskArrayList()) {
+            subtask.setStatus(TaskStatus.NEW);
+        }
+
+        assertEquals(epicInMemory.getStatus(), TaskStatus.NEW);
+
+        taskManager.updateSubtask(new Subtask(
+                "Изменённое название",
+                "Изменённое описание",
+                3,
+                epicInMemory,
+                TaskStatus.IN_PROGRESS
+        ));
+
+        assertEquals(epicInMemory.getStatus(), TaskStatus.IN_PROGRESS);
+
+        taskManager.deleteSubtaskById(3);
+
+        assertEquals(TaskStatus.NEW, epicInMemory.getStatus());
+
+        for (int i = 1; i <= taskManager.getSubtasks().size(); i++) {
+            taskManager.updateSubtask(new Subtask(
+                    "Какое-то имя",
+                    "Какое-то описание",
+                    i,
+                    epicInMemory,
+                    TaskStatus.DONE
+            ));
+        }
+
+        assertEquals(TaskStatus.DONE, epicInMemory.getStatus());
 
     }
 
