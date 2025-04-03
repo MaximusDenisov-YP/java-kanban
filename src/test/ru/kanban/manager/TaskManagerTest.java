@@ -100,6 +100,73 @@ public class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Проверка корректного удаления всех Task из History")
+    void deleteCorrectTasksInHistoryList() {
+        Task someTask = getTestTask();
+        Task someTask1 = getTestTask();
+        Epic someEpic = getTestEpic();
+        Epic someEpic1 = getTestEpic();
+        Subtask someSubtask = getTestSubtask(someEpic);
+        Subtask someSubtask1 = getTestSubtask(someEpic);
+        Subtask someSubtask2 = getTestSubtask(someEpic);
+
+        taskManager.postTask(someTask);
+        taskManager.postTask(someTask1);
+        taskManager.postEpic(someEpic);
+        taskManager.postEpic(someEpic1);
+        taskManager.postSubtask(someSubtask);
+        taskManager.postSubtask(someSubtask1);
+        taskManager.postSubtask(someSubtask2);
+
+        for (Task task : taskManager.getTasks()) {
+            taskManager.getTaskById(task.getId());
+        }
+        for (Task task : taskManager.getTasks()) {
+            taskManager.getTaskById(task.getId());
+        }
+        for (Epic epic : taskManager.getEpics()) {
+            taskManager.getEpicById(epic.getId());
+        }
+        for (Subtask subtask : taskManager.getSubtasks()) {
+            taskManager.getSubtaskById(subtask.getId());
+        }
+        for (Task task : taskManager.getTasks()) {
+            taskManager.getTaskById(task.getId());
+        }
+        for (Epic epic : taskManager.getEpics()) {
+            taskManager.getEpicById(epic.getId());
+        }
+
+        System.out.println(historyManager.getHistory());
+
+        historyManager.remove(4);
+        System.out.println("\n");
+        System.out.println(historyManager.getHistory());
+
+        historyManager.remove(1);
+        System.out.println("\n");
+        System.out.println(historyManager.getHistory());
+
+        historyManager.remove(3);
+        System.out.println("\n");
+        System.out.println(historyManager.getHistory());
+
+        historyManager.remove(0);
+        historyManager.remove(2);
+        historyManager.remove(6);
+        System.out.println("\n");
+        historyManager.getHistory();
+        for (Task task : taskManager.getTasks()) {
+            taskManager.getTaskById(task.getId());
+        }
+        for (Epic epic : taskManager.getEpics()) {
+            taskManager.getEpicById(epic.getId());
+        }
+        System.out.println("\n");
+        historyManager.getHistory();
+    }
+
+    @Test
     @DisplayName("Проверка корректного удаления всех Epic")
     void deleteCorrectAllEpicInEpicList() {
         for (int i = 0; i < 4; i++) {
@@ -258,7 +325,6 @@ public class TaskManagerTest {
     @DisplayName("История сохраняет предыдущие версии задач")
     void historyManagerSavesPreviousVersionsOfTasks() {
         // Опустошаем менеджер историй
-        historyManager.clearHistory();
 
         Task task = getTestTask();
         taskManager.postTask(task);
@@ -278,35 +344,6 @@ public class TaskManagerTest {
         assertEquals("Разработка", savedTask.getName(), "Имя должно остаться прежним");
         assertEquals("Разработать приложение \"Kanban-доска\"", savedTask.getDescription(), "Описание должно остаться прежним");
         assertEquals(TaskStatus.NEW, savedTask.getStatus(), "Статус должен остаться прежним");
-    }
-
-    @Test
-    @DisplayName("История может хранить только до 10 задач включительно")
-    void historyManagerMakeSavesOnlyTenTasks() {
-        taskManager.postTask(getTestTask());
-        Epic epic = getTestEpic();
-        taskManager.postEpic(epic);
-        taskManager.postSubtask(getTestSubtask(epic));
-
-        for (int i = 0; i < 3; i++) {
-            taskManager.getTaskById(0);
-            taskManager.getEpicById(1);
-            taskManager.getSubtaskById(2);
-        }
-
-        taskManager.getTaskById(0);
-        taskManager.getTaskById(0);
-
-        assertEquals(
-                historyManager.getHistory().size(),
-                10,
-                "В истории операции должно быть максимум 10 значений"
-        );
-        assertEquals(
-                1,
-                historyManager.getHistory().get(0).getId(),
-                "ID значения должен быть 1, так как задача с 0 ID, после добавления 11-го элемента, должна была удалиться");
-
     }
 
     @Test
