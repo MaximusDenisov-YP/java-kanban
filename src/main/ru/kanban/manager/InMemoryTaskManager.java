@@ -182,6 +182,7 @@ public class InMemoryTaskManager implements TaskManager {
 
             if (!subTasksList.isEmpty()) {
                 for (Subtask subtask : subTasksList) {
+                    subtasks.remove(subtask.getId());
                     historyManager.remove(subtask.getId());
                 }
                 subTasksList.clear();

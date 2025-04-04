@@ -67,13 +67,20 @@ public class TaskManagerTest {
     }
 
     @Test
-    @DisplayName("Проверка корректного удаления Epic по ID")
+    @DisplayName("Проверка корректного удаления Epic с Subtasks по ID")
     void deleteCorrectEpicByIdInEpicList() {
         Epic epic = getTestEpic();
         taskManager.postEpic(epic);
+        Subtask someSubtask = getTestSubtask(epic);
+        Subtask someSubtask1 = getTestSubtask(epic);
+        taskManager.postSubtask(someSubtask);
+        taskManager.postSubtask(someSubtask1);
+        assertFalse(taskManager.getSubtasks().isEmpty());
         assertFalse(taskManager.getEpics().isEmpty());
         taskManager.deleteEpicById(0);
         assertTrue(taskManager.getEpics().isEmpty());
+        assertFalse(taskManager.getSubtasks().contains(someSubtask));
+        assertFalse(taskManager.getSubtasks().contains(someSubtask1));
     }
 
     @Test
