@@ -402,13 +402,13 @@ public class TaskManagerTest {
 
         assertEquals(epicInMemory.getStatus(), TaskStatus.NEW);
 
-        for(Subtask subtask : epicInMemory.getSubtaskArrayList()) {
+        for (Subtask subtask : epicInMemory.getSubtaskArrayList()) {
             subtask.setStatus(TaskStatus.DONE);
         }
 
         assertEquals(epicInMemory.getStatus(), TaskStatus.DONE);
 
-        for(Subtask subtask : epicInMemory.getSubtaskArrayList()) {
+        for (Subtask subtask : epicInMemory.getSubtaskArrayList()) {
             subtask.setStatus(TaskStatus.NEW);
         }
 

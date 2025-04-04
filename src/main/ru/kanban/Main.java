@@ -83,6 +83,7 @@ public class Main {
             taskManager.getEpicById(r.nextInt(taskManager.getEpics().size() - 1));
         }
     }
+
     private static Task getTestTask() {
         return new Task("Разработка", "Разработать приложение \"Kanban-доска\"", TaskStatus.NEW);
     }

@@ -38,8 +38,7 @@ public class InMemoryHistoryManager implements HistoryManager {
             last = newNode;
             if (l == null) {
                 first = newNode;
-            }
-            else {
+            } else {
                 l.next = newNode;
             }
             historyMap.put(task.getId(), newNode);
