@@ -56,7 +56,7 @@ public class Epic extends Task {
 
     @Override
     public String toString() {
-        return "Epic"+ super.toString().substring(4);
+        return "Epic" + super.toString().substring(4);
     }
 
 }
