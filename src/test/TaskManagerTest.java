@@ -1,5 +1,3 @@
-package ru.kanban.manager;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.*;
@@ -7,6 +5,9 @@ import ru.kanban.entity.Epic;
 import ru.kanban.entity.Subtask;
 import ru.kanban.entity.Task;
 import ru.kanban.entity.TaskStatus;
+import ru.kanban.manager.HistoryManager;
+import ru.kanban.manager.Managers;
+import ru.kanban.manager.TaskManager;
 
 import java.util.List;
 
