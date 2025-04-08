@@ -39,20 +39,33 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllTasks() {
+        tasks.values().forEach(task -> historyManager.remove(task.getId()));
         tasks.clear();
     }
 
     @Override
     public void deleteAllSubtasks() {
-        for (Epic epic : epics.values()) {
+        epics.values().forEach(epic -> {
             epic.clearSubtasks();
             epic.checkEpicStatus();
-        }
+        });
+        subtasks.values().forEach(subtask -> historyManager.remove(subtask.getId()));
         subtasks.clear();
     }
 
     @Override
     public void deleteAllEpics() {
+        epics.values().forEach(epic -> {
+            ArrayList<Subtask> subTasksList = epics.get(epic.getId()).getSubtaskArrayList();
+
+            if (subTasksList != null) {
+                if (!subTasksList.isEmpty()) {
+                    subTasksList.forEach(subtask -> historyManager.remove(subtask.getId()));
+                    subTasksList.clear();
+                }
+            }
+            historyManager.remove(epic.getId());
+        });
         epics.clear();
         subtasks.clear();
     }
@@ -171,6 +184,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task deleteTaskById(int id) {
+        historyManager.remove(id);
         return tasks.remove(id);
     }
 
@@ -178,10 +192,16 @@ public class InMemoryTaskManager implements TaskManager {
     public Epic deleteEpicById(int id) {
         if (epics.get(id) != null) {
             ArrayList<Subtask> subTasksList = epics.get(id).getSubtaskArrayList();
+
             if (!subTasksList.isEmpty()) {
+                subTasksList.forEach(subtask -> {
+                    historyManager.remove(subtask.getId());
+                    subtasks.remove(subtask.getId());
+                });
                 subTasksList.clear();
             }
             if (epics.get(id).getSubtaskArrayList().isEmpty()) {
+                historyManager.remove(id);
                 return epics.remove(id);
             } else {
                 throw new RuntimeException("Подзадачи эпика не были удалены.");
@@ -196,6 +216,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (subtasks.get(id) != null) {
             subtasks.get(id).getEpic().getSubtaskArrayList().remove(subtasks.get(id));
             subtasks.get(id).getEpic().checkEpicStatus();
+            historyManager.remove(id);
             return subtasks.remove(id);
         } else {
             return null;
