@@ -10,9 +10,8 @@ import ru.kanban.exception.ManagerSaveException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 
-public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
+public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private File autoSave;
 
@@ -41,7 +40,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ManagerSaveException("Ошибка при чтении файла -> " + e.getMessage());
         }
         return taskManager;
     }
@@ -101,21 +100,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     @Override
-    public ArrayList<Task> getTasks() {
-        return super.getTasks();
-    }
-
-    @Override
-    public ArrayList<Subtask> getSubtasks() {
-        return super.getSubtasks();
-    }
-
-    @Override
-    public ArrayList<Epic> getEpics() {
-        return super.getEpics();
-    }
-
-    @Override
     public void deleteAllTasks() {
         super.deleteAllTasks();
         save();
@@ -131,21 +115,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     public void deleteAllEpics() {
         super.deleteAllEpics();
         save();
-    }
-
-    @Override
-    public Task getTaskById(int id) {
-        return super.getTaskById(id);
-    }
-
-    @Override
-    public Epic getEpicById(int id) {
-        return super.getEpicById(id);
-    }
-
-    @Override
-    public Subtask getSubtaskById(int id) {
-        return super.getSubtaskById(id);
     }
 
     @Override
@@ -209,21 +178,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         Subtask resultSubtask = super.deleteSubtaskById(id);
         save();
         return new Subtask(resultSubtask);
-    }
-
-    @Override
-    public int getNextId() {
-        return super.getNextId();
-    }
-
-    @Override
-    public ArrayList<Subtask> getSubtasksFromEpic(Epic epic) {
-        return super.getSubtasksFromEpic(epic);
-    }
-
-    @Override
-    public HistoryManager getHistoryManager() {
-        return super.getHistoryManager();
     }
 
     private TaskStatus getTaskStatusFromString(String str) {
