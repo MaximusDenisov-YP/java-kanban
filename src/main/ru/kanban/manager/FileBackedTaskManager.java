@@ -10,6 +10,8 @@ import ru.kanban.exception.ManagerSaveException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
@@ -59,29 +61,34 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     public Task fromString(String value) {
         String[] values = value.split(",");
+        if (values.length < 7) {
+            throw new IllegalArgumentException("Недостаточно полей в строке: " + value);
+        }
         int taskId = Integer.parseInt(values[0]);
         String className = values[1];
         String taskName = values[2];
         TaskStatus taskStatus = getTaskStatusFromString(values[3]);
         String taskDescription = values[4];
+        LocalDateTime dateTime = LocalDateTime.parse(values[5]);
+        Duration duration = Duration.parse(values[6]);
         Epic epic = null;
         if (className.equals("SUBTASK")) {
-            epic = getEpicById(Integer.parseInt(values[5].trim()));
+            dateTime = LocalDateTime.parse(values[5]);
+            duration = Duration.parse(values[6]);
+            epic = getEpicById(Integer.parseInt(values[7].trim()));
         }
-
         switch (className) {
             case "TASK" -> {
-                return new Task(taskName, taskDescription, taskId, taskStatus);
+                return new Task(taskName, taskDescription, taskId, taskStatus, dateTime, duration);
             }
             case "SUBTASK" -> {
-                return new Subtask(taskName, taskDescription, taskId, epic, taskStatus);
+                return new Subtask(taskName, taskDescription, taskId, epic, taskStatus, dateTime, duration);
             }
             case "EPIC" -> {
                 return new Epic(taskName, taskDescription, taskId);
             }
             default -> throw new RuntimeException("На вход поступил неизвестный тип задачи -> " + className);
         }
-
     }
 
     public String toString(Task task) {
@@ -91,6 +98,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         sb.append(task.getName()).append(",");
         sb.append(task.getStatus()).append(",");
         sb.append(task.getDescription()).append(",");
+        sb.append(task.getStartTime()).append(",");
+        sb.append(task.getDuration()).append(",");
 
         if (task instanceof Subtask subtask) {
             sb.append(subtask.getEpic().getId());

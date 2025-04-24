@@ -9,6 +9,8 @@ import ru.kanban.manager.HistoryManager;
 import ru.kanban.manager.Managers;
 import ru.kanban.manager.TaskManager;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class TaskManagerTest {
@@ -232,7 +234,7 @@ public class TaskManagerTest {
         assertEquals(subtask.getName(), taskManager.getSubtaskById(1).getName());
         assertEquals(subtask.getDescription(), taskManager.getSubtaskById(1).getDescription());
         assertEquals(subtask.getStatus(), taskManager.getSubtaskById(1).getStatus());
-        Subtask subtaskToChange = new Subtask("a", "b", epic);
+        Subtask subtaskToChange = new Subtask("a", "b", epic, LocalDateTime.now(), Duration.ofMinutes(180));
         subtaskToChange.setId(1);
         taskManager.updateSubtask(subtaskToChange);
         assertEquals(subtaskToChange, taskManager.getSubtaskById(1));
@@ -364,12 +366,16 @@ public class TaskManagerTest {
         taskManager.postSubtask(new Subtask(
                 "Name",
                 "Description",
-                epicInMemory
+                epicInMemory,
+                LocalDateTime.now(),
+                Duration.ofMinutes(180)
         ));
         taskManager.postSubtask(new Subtask(
                 "SomeName",
                 "SomeDescription",
-                epicInMemory
+                epicInMemory,
+                LocalDateTime.now().plusDays(3),
+                Duration.ofMinutes(1480)
         ));
         assertEquals(taskManager.getSubtasks().size(), 3);
         assertEquals(epicInMemory.getSubtaskArrayList().size(), 3);
@@ -393,12 +399,16 @@ public class TaskManagerTest {
         taskManager.postSubtask(new Subtask(
                 "Name",
                 "Description",
-                epicInMemory
+                epicInMemory,
+                LocalDateTime.now(),
+                Duration.ofMinutes(300)
         ));
         taskManager.postSubtask(new Subtask(
                 "SomeName",
                 "SomeDescription",
-                epicInMemory
+                epicInMemory,
+                LocalDateTime.now(),
+                Duration.ofMinutes(1480)
         ));
 
         assertEquals(epicInMemory.getStatus(), TaskStatus.NEW);
@@ -420,7 +430,9 @@ public class TaskManagerTest {
                 "Изменённое описание",
                 3,
                 epicInMemory,
-                TaskStatus.IN_PROGRESS
+                TaskStatus.IN_PROGRESS,
+                LocalDateTime.now(),
+                Duration.ofMinutes(60 * 48)
         ));
 
         assertEquals(epicInMemory.getStatus(), TaskStatus.IN_PROGRESS);
@@ -435,7 +447,9 @@ public class TaskManagerTest {
                     "Какое-то описание",
                     i,
                     epicInMemory,
-                    TaskStatus.DONE
+                    TaskStatus.DONE,
+                    LocalDateTime.now(),
+                    Duration.ofMinutes(60 * 5)
             ));
         }
 
@@ -448,7 +462,7 @@ public class TaskManagerTest {
     }
 
     private Subtask getTestSubtask(Epic epic) {
-        return new Subtask("Написание кода", "Написать код", epic);
+        return new Subtask("Написание кода", "Написать код", epic, LocalDateTime.now(), Duration.ofMinutes(180));
     }
 
     private Epic getTestEpic() {
