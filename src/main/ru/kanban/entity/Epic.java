@@ -51,6 +51,7 @@ public class Epic extends Task {
         if (this.getStartTime() == null) {
             this.setStartTime(subtasks.get(0).getStartTime());
             this.setDuration(subtasks.get(0).getDuration());
+            this.setEndTime(subtasks.get(0).getEndTime());
         } else {
             this.setStartTime(subtasks.stream()
                     .map(Subtask::getStartTime)
@@ -72,7 +73,6 @@ public class Epic extends Task {
 
     public void checkEpicStatus() {
         int newStatusCount = 0;
-        // Тут будет логика наложения отрезков.
         for (Subtask subtask : this.getSubtaskArrayList()) {
             if (subtask.getStatus() == TaskStatus.IN_PROGRESS) {
                 this.setStatus(TaskStatus.IN_PROGRESS);

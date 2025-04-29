@@ -5,6 +5,8 @@ import ru.kanban.entity.Subtask;
 import ru.kanban.entity.Task;
 
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.TreeSet;
 
 public interface TaskManager {
 
@@ -20,11 +22,11 @@ public interface TaskManager {
 
     void deleteAllEpics();
 
-    Task getTaskById(int id);
+    Optional<Task> getTaskById(int id);
 
-    Epic getEpicById(int id);
+    Optional<Epic> getEpicById(int id);
 
-    Subtask getSubtaskById(int id);
+    Optional<Subtask> getSubtaskById(int id);
 
     Task postTask(Task task);
 
@@ -49,5 +51,9 @@ public interface TaskManager {
     ArrayList<Subtask> getSubtasksFromEpic(Epic epic);
 
     HistoryManager getHistoryManager();
+
+    TreeSet<Task> getPrioritizedTasks();
+
+    boolean isTimeCrossing(Task task);
 
 }

@@ -43,13 +43,13 @@ public class FileBackedTaskManagerTest {
                         Duration.ofMinutes(180))
         );
         assertEquals(
-                "0,TASK,Разработка,NEW,Разработать приложение \"Kanban-доска\",2025-04-24T21:05:51.055692,PT3H,\n",
+                "0,TASK,Разработка,NEW,Разработать приложение \"Kanban-доска\",2025-04-24T21:05:51.055692,180,\n",
                 readStringFromFile(taskManager.getAutosave())
         );
         taskManager.postEpic(new Epic("Новый эпик", "Его описание"));
         assertEquals(
                 """
-                        0,TASK,Разработка,NEW,Разработать приложение "Kanban-доска",2025-04-24T21:05:51.055692,PT3H,
+                        0,TASK,Разработка,NEW,Разработать приложение "Kanban-доска",2025-04-24T21:05:51.055692,180,
                         1,EPIC,Новый эпик,NEW,Его описание,null,null,
                         """,
                 readStringFromFile(taskManager.getAutosave())
@@ -57,16 +57,16 @@ public class FileBackedTaskManagerTest {
         taskManager.postSubtask(
                 new Subtask("Новый сабтаск",
                         "Описание сабтаска",
-                        taskManager.getEpicById(1),
+                        taskManager.getEpicById(1).orElseThrow(),
                         LocalDateTime.parse("2025-04-24T21:05:51.055692"),
                         Duration.ofMinutes(60)
                 )
         );
         assertEquals(
                 """
-                        0,TASK,Разработка,NEW,Разработать приложение "Kanban-доска",2025-04-24T21:05:51.055692,PT3H,
-                        1,EPIC,Новый эпик,NEW,Его описание,2025-04-24T21:05:51.055692,PT1H,
-                        2,SUBTASK,Новый сабтаск,NEW,Описание сабтаска,2025-04-24T21:05:51.055692,PT1H,1
+                        0,TASK,Разработка,NEW,Разработать приложение "Kanban-доска",2025-04-24T21:05:51.055692,180,
+                        1,EPIC,Новый эпик,NEW,Его описание,2025-04-24T21:05:51.055692,60,
+                        2,SUBTASK,Новый сабтаск,NEW,Описание сабтаска,2025-04-24T21:05:51.055692,60,1
                         """,
                 readStringFromFile(taskManager.getAutosave())
         );
@@ -79,10 +79,10 @@ public class FileBackedTaskManagerTest {
     void addCorrectTaskMemoryToTaskManager() {
         String strForAutosave =
                 """
-                        1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,PT1H
-                        2,EPIC,Epic2,DONE,Description epic2,2025-04-26T20:01:49.500465,PT2H
-                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-27T20:01:49.500465,PT1H,2
-                        
+                        1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,60
+                        2,EPIC,Epic2,DONE,Description epic2,2025-04-26T20:01:49.500465,120
+                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-27T20:01:49.500465,60,2
+                                                
                         """;
         taskManager = FileBackedTaskManager.loadFromFile(writeStringToFile(strForAutosave, autosave));
         assertFalse(taskManager.getTasks().isEmpty());
@@ -104,10 +104,10 @@ public class FileBackedTaskManagerTest {
     void deleteCorrectAnyTaskFromTaskManagerWithMemory() {
         String strForAutosave =
                 """
-                        1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,PT1H
-                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,PT1H
-                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,PT1H,2
-                        
+                        1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,60
+                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,60
+                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,60,2
+                                                
                         """;
 
         File filledFile = writeStringToFile(strForAutosave, autosave);
@@ -116,8 +116,8 @@ public class FileBackedTaskManagerTest {
         assertEquals(
                 readStringFromFile(taskManager.getAutosave()),
                 """
-                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,PT1H,
-                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,PT1H,2
+                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,60,
+                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,60,2
                         """
         );
         taskManager.deleteSubtaskById(3);
@@ -137,10 +137,10 @@ public class FileBackedTaskManagerTest {
     void deleteCorrectAllTasksFromTaskManagerWithMemory() {
         String strForAutosave =
                 """
-                        1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,PT1H
-                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,PT1H
-                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,PT1H,2
-                        
+                        1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,60
+                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,60
+                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,60,2
+                                                
                         """;
 
         taskManager = FileBackedTaskManager.loadFromFile(writeStringToFile(strForAutosave, autosave));
@@ -148,18 +148,18 @@ public class FileBackedTaskManagerTest {
         assertEquals(
                 readStringFromFile(taskManager.getAutosave()),
                 """
-                        0,TASK,Разработка,NEW,Разработать приложение "Kanban-доска",2025-04-24T20:48:18.371191,PT1H,
-                        1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,PT1H,
-                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,PT1H,
-                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,PT1H,2
+                        0,TASK,Разработка,NEW,Разработать приложение "Kanban-доска",2025-04-24T20:48:18.371191,60,
+                        1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,60,
+                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,60,
+                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,60,2
                         """
         );
         taskManager.deleteAllTasks();
         assertEquals(
                 readStringFromFile(taskManager.getAutosave()),
                 """
-                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,PT1H,
-                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,PT1H,2
+                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,60,
+                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,60,2
                         """
         );
     }
@@ -169,16 +169,16 @@ public class FileBackedTaskManagerTest {
     void deleteCorrectSubtasksWithEpicFromTaskManagerWithMemory() {
         String strForAutosave =
                 """
-                        1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,PT1H
-                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,PT1H
-                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,PT1H,2
-                        
+                        1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,60
+                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,60
+                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,60,2
+                                                
                         """;
 
         taskManager = FileBackedTaskManager.loadFromFile(writeStringToFile(strForAutosave, autosave));
         taskManager.deleteEpicById(2);
         assertEquals(
-                "1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,PT1H,\n",
+                "1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,60,\n",
                 readStringFromFile(taskManager.getAutosave())
         );
     }
