@@ -64,7 +64,11 @@ public class Epic extends Task {
                     .orElse(null)
             );
             if (this.getStartTime() != null && this.getEndTime() != null) {
-                this.setDuration(Duration.between(this.getStartTime(), this.getEndTime()));
+                this.setDuration(
+                        subtaskArrayList.stream()
+                                .map(Subtask::getDuration)
+                                .reduce(Duration.ZERO, Duration::plus)
+                );
             } else {
                 this.setDuration(null);
             }

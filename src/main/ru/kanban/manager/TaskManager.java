@@ -5,8 +5,8 @@ import ru.kanban.entity.Subtask;
 import ru.kanban.entity.Task;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.TreeSet;
 
 public interface TaskManager {
 
@@ -52,7 +52,7 @@ public interface TaskManager {
 
     HistoryManager getHistoryManager();
 
-    TreeSet<Task> getPrioritizedTasks();
+    List<Task> getPrioritizedTasks();
 
     boolean isTimeCrossing(Task task);
 

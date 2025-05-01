@@ -10,10 +10,11 @@ public class Subtask extends Task {
             String name,
             String description,
             Epic epic,
+            TaskStatus status,
             LocalDateTime startTime,
             Duration duration
     ) {
-        super(name, description, TaskStatus.NEW, startTime, duration);
+        super(name, description, status, startTime, duration);
         this.epic = epic;
     }
 

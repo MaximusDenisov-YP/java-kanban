@@ -247,7 +247,7 @@ public class TaskManagerTest {
         assertEquals(subtask.getName(), memorySubtask.getName());
         assertEquals(subtask.getDescription(), memorySubtask.getDescription());
         assertEquals(subtask.getStatus(), memorySubtask.getStatus());
-        Subtask subtaskToChange = new Subtask("a", "b", epic, LocalDateTime.now(), Duration.ofMinutes(180));
+        Subtask subtaskToChange = new Subtask("a", "b", epic, TaskStatus.NEW, LocalDateTime.now(), Duration.ofMinutes(180));
         subtaskToChange.setId(1);
         taskManager.updateSubtask(subtaskToChange);
         assertEquals(subtaskToChange, taskManager.getSubtaskById(1).orElseThrow());
@@ -372,7 +372,8 @@ public class TaskManagerTest {
     }
 
     @Test
-    @DisplayName("Проверка всеобъемливающего удаления Subtask")
+    @DisplayName
+            ("Проверка всеобъемливающего удаления Subtask")
     public void checkDeleteSubtasksInAllListAndEpicSubtaskList() {
         Epic epic = getTestEpic();
         taskManager.postEpic(epic);
@@ -382,6 +383,7 @@ public class TaskManagerTest {
                 "Name",
                 "Description",
                 epicInMemory,
+                TaskStatus.NEW,
                 LocalDateTime.now().plusDays(2),
                 Duration.ofMinutes(180)
         ));
@@ -389,6 +391,7 @@ public class TaskManagerTest {
                 "SomeName",
                 "SomeDescription",
                 epicInMemory,
+                TaskStatus.NEW,
                 LocalDateTime.now().plusDays(3),
                 Duration.ofMinutes(1480)
         ));
@@ -415,6 +418,7 @@ public class TaskManagerTest {
                 "Name",
                 "Description",
                 epicInMemory,
+                TaskStatus.NEW,
                 LocalDateTime.now().plusDays(7),
                 Duration.ofMinutes(300)
         ));
@@ -422,6 +426,7 @@ public class TaskManagerTest {
                 "SomeName",
                 "SomeDescription",
                 epicInMemory,
+                TaskStatus.NEW,
                 LocalDateTime.now().plusDays(18),
                 Duration.ofMinutes(1480)
         ));
@@ -476,6 +481,7 @@ public class TaskManagerTest {
     @DisplayName("Проверка корректного наполнения приоритезированного списка tasks")
     void checkPrioritizedTasksInList() {
         Task task = getTestTask();
+        Epic someEpic = getTestEpic();
         taskManager.postTask(task);
         taskManager.postTask(
                 new Task("Четвёртый по значимости таск", "Описание", TaskStatus.DONE, LocalDateTime.now().plusDays(3), Duration.ofMinutes(60))
@@ -483,11 +489,19 @@ public class TaskManagerTest {
         taskManager.postTask(
                 new Task("Третий по значимости таск", "Описание", TaskStatus.NEW, LocalDateTime.now().plusDays(2), Duration.ofMinutes(60))
         );
-        taskManager.postTask(
-                new Task("Пятый по значимости таск", "Описание", TaskStatus.IN_PROGRESS, LocalDateTime.now().plusDays(4), Duration.ofMinutes(60))
+        taskManager.postSubtask(
+                new Subtask("Пятый по значимости таск", "Описание", someEpic, TaskStatus.IN_PROGRESS, LocalDateTime.now().plusDays(4), Duration.ofMinutes(60))
         );
         taskManager.postTask(
                 new Task("Второй по значимости таск", "Описание", TaskStatus.NEW, LocalDateTime.now().plusDays(1), Duration.ofMinutes(60))
+        );
+        String result = "";
+        for (Task taskInList : taskManager.getPrioritizedTasks()) {
+            result = result.concat(taskInList.getName() + ", ");
+        }
+        assertEquals(
+                result,
+                "Разработка, Второй по значимости таск, Третий по значимости таск, Четвёртый по значимости таск, Пятый по значимости таск, "
         );
         taskManager.getPrioritizedTasks().forEach(System.out::println);
     }
@@ -497,7 +511,7 @@ public class TaskManagerTest {
     }
 
     private Subtask getTestSubtask(Epic epic) {
-        return new Subtask("Написание кода", "Написать код", epic, LocalDateTime.now().plusDays(1), Duration.ofMinutes(180));
+        return new Subtask("Написание кода", "Написать код", epic, TaskStatus.NEW, LocalDateTime.now().plusDays(1), Duration.ofMinutes(180));
     }
 
     private Epic getTestEpic() {

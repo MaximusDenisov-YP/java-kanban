@@ -58,6 +58,7 @@ public class FileBackedTaskManagerTest {
                 new Subtask("Новый сабтаск",
                         "Описание сабтаска",
                         taskManager.getEpicById(1).orElseThrow(),
+                        TaskStatus.NEW,
                         LocalDateTime.parse("2025-04-24T21:05:51.055692"),
                         Duration.ofMinutes(60)
                 )
@@ -105,8 +106,8 @@ public class FileBackedTaskManagerTest {
         String strForAutosave =
                 """
                         1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,60
-                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,60
-                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,60,2
+                        2,EPIC,Epic2,DONE,Description epic2,2025-04-26T20:01:49.500465,60
+                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-26T20:01:49.500465,60,2
                                                 
                         """;
 
@@ -116,8 +117,8 @@ public class FileBackedTaskManagerTest {
         assertEquals(
                 readStringFromFile(taskManager.getAutosave()),
                 """
-                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,60,
-                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,60,2
+                        2,EPIC,Epic2,DONE,Description epic2,2025-04-26T20:01:49.500465,60,
+                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-26T20:01:49.500465,60,2
                         """
         );
         taskManager.deleteSubtaskById(3);
@@ -170,8 +171,8 @@ public class FileBackedTaskManagerTest {
         String strForAutosave =
                 """
                         1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,60
-                        2,EPIC,Epic2,DONE,Description epic2,2025-04-25T20:01:49.500465,60
-                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-25T20:01:49.500465,60,2
+                        2,EPIC,Epic2,DONE,Description epic2,2025-04-26T20:01:49.500465,60
+                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-26T20:01:49.500465,60,2
                                                 
                         """;
 
@@ -181,6 +182,46 @@ public class FileBackedTaskManagerTest {
                 "1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,60,\n",
                 readStringFromFile(taskManager.getAutosave())
         );
+    }
+
+    @Test
+    @DisplayName("Проверка корректной работы задач в приоритезированном списке при добавлении, модификации и удалении их оттуда")
+    void testMethodsWithPrioritizedList() {
+        String strForAutosave =
+                """
+                        1,TASK,Task1,NEW,Description task1,2025-04-25T20:01:49.500465,60
+                        2,EPIC,Epic2,DONE,Description epic2,2025-04-26T20:01:49.500465,60
+                        3,SUBTASK,Sub Task2,DONE,Description sub task3,2025-04-26T20:01:49.500465,60,2
+                                                
+                        """;
+        taskManager = FileBackedTaskManager.loadFromFile(writeStringToFile(strForAutosave, autosave));
+        taskManager.updateTask(
+                new Task(
+                        "Task1",
+                        "Description task1",
+                        1,
+                        TaskStatus.DONE,
+                        LocalDateTime.parse("2025-04-25T20:01:49.500465"),
+                        Duration.ofMinutes(60)
+                )
+        );
+        assertEquals(
+                TaskStatus.DONE,
+                taskManager.getPrioritizedTasks().get(1).getStatus()
+        );
+        taskManager.postSubtask(
+                new Subtask(
+                        "Проверка1",
+                        "Описание",
+                        taskManager.getEpicById(2).orElseThrow(),
+                        TaskStatus.NEW,
+                        LocalDateTime.now().plusDays(6),
+                        Duration.ofMinutes(60)
+                )
+        );
+        assertEquals(taskManager.getPrioritizedTasks().size(), 3);
+        taskManager.deleteEpicById(2);
+        assertEquals(taskManager.getPrioritizedTasks().size(), 1);
     }
 
 
