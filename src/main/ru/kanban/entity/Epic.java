@@ -1,9 +1,12 @@
 package ru.kanban.entity;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class Epic extends Task {
     private final ArrayList<Subtask> subtaskArrayList;
+    private LocalDateTime endTime = null;
 
     public Epic(String name, String description) {
         super(name, description, TaskStatus.NEW);
@@ -11,12 +14,25 @@ public class Epic extends Task {
     }
 
     public Epic(String name, String description, int id) {
-        super(name, description, id, TaskStatus.NEW);
+        super(
+                name,
+                description,
+                id,
+                TaskStatus.NEW
+        );
         this.subtaskArrayList = new ArrayList<>();
     }
 
     public Epic(Epic epic) {
-        super(epic.getName(), epic.getDescription(), epic.getId(), epic.getStatus());
+        super(
+                epic.getName(),
+                epic.getDescription(),
+                epic.getId(),
+                epic.getStatus(),
+                epic.getStartTime(),
+                epic.getDuration()
+        );
+        this.endTime = epic.endTime;
         this.subtaskArrayList = new ArrayList<>();
     }
 
@@ -28,6 +44,35 @@ public class Epic extends Task {
         subtaskArrayList.add(subTask);
         this.checkEpicStatus();
         return subTask;
+    }
+
+    public void changeStartTimeAndDuration() {
+        ArrayList<Subtask> subtasks = this.subtaskArrayList;
+        if (this.getStartTime() == null) {
+            this.setStartTime(subtasks.get(0).getStartTime());
+            this.setDuration(subtasks.get(0).getDuration());
+            this.setEndTime(subtasks.get(0).getEndTime());
+        } else {
+            this.setStartTime(subtasks.stream()
+                    .map(Subtask::getStartTime)
+                    .min(LocalDateTime::compareTo)
+                    .orElse(null)
+            );
+            this.setEndTime(subtasks.stream()
+                    .map(Subtask::getEndTime)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null)
+            );
+            if (this.getStartTime() != null && this.getEndTime() != null) {
+                this.setDuration(
+                        subtaskArrayList.stream()
+                                .map(Subtask::getDuration)
+                                .reduce(Duration.ZERO, Duration::plus)
+                );
+            } else {
+                this.setDuration(null);
+            }
+        }
     }
 
     public void checkEpicStatus() {
@@ -48,6 +93,14 @@ public class Epic extends Task {
         } else { // Если не все NEW и не все DONE, следовательно Epic в прогрессе. (В случае, если нет Subtask - IN_PROGRESS, но есть и NEW, и DONE.)
             this.setStatus(TaskStatus.IN_PROGRESS);
         }
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     public void clearSubtasks() {

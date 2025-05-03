@@ -1,6 +1,5 @@
 package ru.kanban.manager;
 
-import org.junit.jupiter.api.Assertions;
 import ru.kanban.entity.Epic;
 import ru.kanban.entity.Subtask;
 import ru.kanban.entity.Task;
@@ -10,6 +9,9 @@ import ru.kanban.exception.ManagerSaveException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
@@ -59,29 +61,34 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     public Task fromString(String value) {
         String[] values = value.split(",");
+        if (values.length < 7) {
+            throw new IllegalArgumentException("Недостаточно полей в строке: " + value);
+        }
         int taskId = Integer.parseInt(values[0]);
         String className = values[1];
         String taskName = values[2];
         TaskStatus taskStatus = getTaskStatusFromString(values[3]);
         String taskDescription = values[4];
+        LocalDateTime dateTime = LocalDateTime.parse(values[5]);
+        Duration duration = Duration.ofMinutes(Long.parseLong(values[6]));
         Epic epic = null;
         if (className.equals("SUBTASK")) {
-            epic = getEpicById(Integer.parseInt(values[5].trim()));
+            dateTime = LocalDateTime.parse(values[5]);
+            duration = Duration.ofMinutes(Long.parseLong(values[6]));
+            epic = getEpicById(Integer.parseInt(values[7].trim())).orElseThrow();
         }
-
         switch (className) {
             case "TASK" -> {
-                return new Task(taskName, taskDescription, taskId, taskStatus);
+                return new Task(taskName, taskDescription, taskId, taskStatus, dateTime, duration);
             }
             case "SUBTASK" -> {
-                return new Subtask(taskName, taskDescription, taskId, epic, taskStatus);
+                return new Subtask(taskName, taskDescription, taskId, epic, taskStatus, dateTime, duration);
             }
             case "EPIC" -> {
                 return new Epic(taskName, taskDescription, taskId);
             }
             default -> throw new RuntimeException("На вход поступил неизвестный тип задачи -> " + className);
         }
-
     }
 
     public String toString(Task task) {
@@ -91,6 +98,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         sb.append(task.getName()).append(",");
         sb.append(task.getStatus()).append(",");
         sb.append(task.getDescription()).append(",");
+        sb.append(task.getStartTime()).append(",");
+        Optional<Duration> optionalDuration = Optional.ofNullable(task.getDuration());
+        if (optionalDuration.isPresent()) sb.append(task.getDuration().toMinutes()).append(",");
+        else sb.append("null").append(",");
 
         if (task instanceof Subtask subtask) {
             sb.append(subtask.getEpic().getId());
@@ -189,43 +200,4 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         };
     }
 
-    // Доп. задание - пользовательский сценарий.
-
-    /**
-     * Дополнительное задание. Реализуем пользовательский сценарий
-     *
-     * <p>
-     * Если у вас останется время, вы можете выполнить дополнительное задание.
-     * <p>
-     * Создайте метод static void main(String[] args) в классе FileBackedTaskManager и реализуйте небольшой сценарий:
-     * Заведите несколько разных задач, эпиков и подзадач.
-     * Создайте новый FileBackedTaskManager-менеджер из этого же файла.
-     * Проверьте, что все задачи, эпики, подзадачи, которые были в старом менеджере, есть в новом.
-     * Обратите внимание, что выполнение этого задания необязательно.
-     *
-     * <p>
-     * Содержимое файла:
-     *
-     * <p>
-     * 1,TASK,Task1,NEW,Description task1 test test test,
-     * <p>
-     * 2,TASK,Task2,IN_PROGRESS,Some description blablabla,
-     * <p>
-     * 3,EPIC,Epic1,IN_PROGRESS,Epic with two Subtasks,
-     * <p>
-     * 4,EPIC,Epic2,DONE,Epic with one Subtask,
-     * <p>
-     * 5,SUBTASK,Sub Task1,DONE,Description sub task1,3
-     * <p>
-     * 6,SUBTASK,Sub Task2,IN_PROGRESS,Description sub task2,3
-     * <p>
-     * 7,SUBTASK,Sub Task3,DONE,Description sub task3,4
-     */
-    public static void main(String[] args) {
-        FileBackedTaskManager taskManager = FileBackedTaskManager.loadFromFile(new File("src/main/resources/autosave.csv"));
-        Assertions.assertEquals(2, taskManager.getTasks().size());
-        Assertions.assertEquals(2, taskManager.getEpics().size());
-        Assertions.assertEquals(3, taskManager.getSubtasks().size());
-        Assertions.assertEquals(2, taskManager.getEpicById(3).getSubtaskArrayList().size());
-    }
 }

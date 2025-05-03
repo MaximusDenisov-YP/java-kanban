@@ -9,6 +9,8 @@ import ru.kanban.manager.HistoryManager;
 import ru.kanban.manager.Managers;
 import ru.kanban.manager.TaskManager;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class TaskManagerTest {
@@ -28,9 +30,10 @@ public class TaskManagerTest {
         Task task = getTestTask();
         taskManager.postTask(task);
         assertFalse(taskManager.getTasks().isEmpty());
-        assertEquals(task.getName(), taskManager.getTaskById(0).getName());
-        assertEquals(task.getStatus(), taskManager.getTaskById(0).getStatus());
-        assertEquals(task.getDescription(), taskManager.getTaskById(0).getDescription());
+        Task memoryTask = taskManager.getTaskById(0).orElseThrow();
+        assertEquals(task.getName(), memoryTask.getName());
+        assertEquals(task.getStatus(), memoryTask.getStatus());
+        assertEquals(task.getDescription(), memoryTask.getDescription());
     }
 
     @Test
@@ -39,9 +42,10 @@ public class TaskManagerTest {
         Epic epic = getTestEpic();
         taskManager.postEpic(epic);
         assertFalse(taskManager.getEpics().isEmpty());
-        assertEquals(epic.getName(), taskManager.getEpicById(0).getName());
-        assertEquals(epic.getDescription(), taskManager.getEpicById(0).getDescription());
-        assertEquals(epic.getStatus(), taskManager.getEpicById(0).getStatus());
+        Epic memoryEpic = taskManager.getEpicById(0).orElseThrow();
+        assertEquals(epic.getName(), memoryEpic.getName());
+        assertEquals(epic.getDescription(), memoryEpic.getDescription());
+        assertEquals(epic.getStatus(), memoryEpic.getStatus());
     }
 
     @Test
@@ -52,9 +56,10 @@ public class TaskManagerTest {
         taskManager.postEpic(epic);
         taskManager.postSubtask(subtask);
         assertFalse(taskManager.getSubtasks().isEmpty());
-        assertEquals(subtask.getEpic(), taskManager.getSubtaskById(1).getEpic());
-        assertEquals(subtask.getDescription(), taskManager.getSubtaskById(1).getDescription());
-        assertEquals(subtask.getName(), taskManager.getSubtaskById(1).getName());
+        Subtask memorySubtask = taskManager.getSubtaskById(1).orElseThrow();
+        assertEquals(subtask.getEpic(), memorySubtask.getEpic());
+        assertEquals(subtask.getDescription(), memorySubtask.getDescription());
+        assertEquals(subtask.getName(), memorySubtask.getName());
     }
 
     @Test
@@ -74,6 +79,7 @@ public class TaskManagerTest {
         taskManager.postEpic(epic);
         Subtask someSubtask = getTestSubtask(epic);
         Subtask someSubtask1 = getTestSubtask(epic);
+        someSubtask1.setStartTime(someSubtask.getStartTime().plusDays(2));
         taskManager.postSubtask(someSubtask);
         taskManager.postSubtask(someSubtask1);
         assertFalse(taskManager.getSubtasks().isEmpty());
@@ -100,7 +106,9 @@ public class TaskManagerTest {
     @DisplayName("Проверка корректного удаления всех Task")
     void deleteCorrectAllTaskInTaskList() {
         for (int i = 0; i < 4; i++) {
-            taskManager.postTask(getTestTask());
+            Task someTask = getTestTask();
+            someTask.setStartTime(someTask.getStartTime().plusDays(i));
+            taskManager.postTask(someTask);
         }
         assertTrue(taskManager.getTasks().size() > 1);
         taskManager.deleteAllTasks();
@@ -119,6 +127,10 @@ public class TaskManagerTest {
         Subtask someSubtask2 = getTestSubtask(someEpic);
 
         taskManager.postTask(someTask);
+        someTask1.setStartTime(someSubtask.getStartTime().plusDays(1));
+        someSubtask.setStartTime(someSubtask.getStartTime().plusDays(2));
+        someSubtask1.setStartTime(someSubtask.getStartTime().plusDays(3));
+        someSubtask2.setStartTime(someSubtask.getStartTime().plusDays(4));
         taskManager.postTask(someTask1);
         taskManager.postEpic(someEpic);
         taskManager.postEpic(someEpic1);
@@ -191,7 +203,9 @@ public class TaskManagerTest {
         Epic epic = getTestEpic();
         taskManager.postEpic(epic);
         for (int i = 0; i < 4; i++) {
-            taskManager.postSubtask(getTestSubtask(epic));
+            Subtask someSubtask = getTestSubtask(epic);
+            someSubtask.setStartTime(someSubtask.getStartTime().plusDays(i));
+            taskManager.postSubtask(someSubtask);
         }
         assertTrue(taskManager.getSubtasks().size() > 1);
         taskManager.deleteAllSubtasks();
@@ -203,11 +217,11 @@ public class TaskManagerTest {
     void updateCorrectTaskInTaskList() {
         Task task = getTestTask();
         taskManager.postTask(task);
-        assertEquals(task, taskManager.getTaskById(0));
+        assertEquals(task, taskManager.getTaskById(0).orElseThrow());
         Task taskToChange = new Task("a", "b", TaskStatus.IN_PROGRESS);
         taskToChange.setId(0);
         taskManager.updateTask(taskToChange);
-        assertEquals(taskToChange, taskManager.getTaskById(0));
+        assertEquals(taskToChange, taskManager.getTaskById(0).orElseThrow());
     }
 
     @Test
@@ -215,11 +229,11 @@ public class TaskManagerTest {
     void updateCorrectEpicInEpicList() {
         Epic epic = getTestEpic();
         taskManager.postEpic(epic);
-        assertEquals(epic, taskManager.getEpicById(0));
+        assertEquals(epic, taskManager.getEpicById(0).orElseThrow());
         Epic epicToChange = new Epic("a", "b");
         epicToChange.setId(0);
         taskManager.updateEpic(epicToChange);
-        assertEquals(epicToChange, taskManager.getEpicById(0));
+        assertEquals(epicToChange, taskManager.getEpicById(0).orElseThrow());
     }
 
     @Test
@@ -229,13 +243,14 @@ public class TaskManagerTest {
         taskManager.postEpic(epic);
         Subtask subtask = getTestSubtask(epic);
         taskManager.postSubtask(subtask);
-        assertEquals(subtask.getName(), taskManager.getSubtaskById(1).getName());
-        assertEquals(subtask.getDescription(), taskManager.getSubtaskById(1).getDescription());
-        assertEquals(subtask.getStatus(), taskManager.getSubtaskById(1).getStatus());
-        Subtask subtaskToChange = new Subtask("a", "b", epic);
+        Subtask memorySubtask = taskManager.getSubtaskById(1).orElseThrow();
+        assertEquals(subtask.getName(), memorySubtask.getName());
+        assertEquals(subtask.getDescription(), memorySubtask.getDescription());
+        assertEquals(subtask.getStatus(), memorySubtask.getStatus());
+        Subtask subtaskToChange = new Subtask("a", "b", epic, TaskStatus.NEW, LocalDateTime.now(), Duration.ofMinutes(180));
         subtaskToChange.setId(1);
         taskManager.updateSubtask(subtaskToChange);
-        assertEquals(subtaskToChange, taskManager.getSubtaskById(1));
+        assertEquals(subtaskToChange, taskManager.getSubtaskById(1).orElseThrow());
     }
 
     @Test
@@ -245,6 +260,7 @@ public class TaskManagerTest {
         taskManager.postEpic(epic);
         Subtask subtask = getTestSubtask(epic);
         Subtask subtask1 = getTestSubtask(epic);
+        subtask1.setStartTime(subtask.getStartTime().plusDays(1));
         taskManager.postSubtask(subtask);
         taskManager.postSubtask(subtask1);
         assertTrue(taskManager.getSubtasksFromEpic(epic).size() > 1);
@@ -288,17 +304,20 @@ public class TaskManagerTest {
         taskManager.postEpic(epic);
         taskManager.postSubtask(subtask);
 
-        assertEquals(task.getName(), taskManager.getTaskById(123).getName());
-        assertEquals(task.getDescription(), taskManager.getTaskById(123).getDescription());
-        assertEquals(task.getStatus(), taskManager.getTaskById(123).getStatus());
+        Task taskWithId123 = taskManager.getTaskById(123).orElseThrow();
+        assertEquals(task.getName(), taskWithId123.getName());
+        assertEquals(task.getDescription(), taskWithId123.getDescription());
+        assertEquals(task.getStatus(), taskWithId123.getStatus());
 
-        assertEquals(epic.getName(), taskManager.getEpicById(111).getName());
-        assertEquals(epic.getDescription(), taskManager.getEpicById(111).getDescription());
-        assertEquals(epic.getStatus(), taskManager.getEpicById(111).getStatus());
+        Task epicWithId111 = taskManager.getEpicById(111).orElseThrow();
+        assertEquals(epic.getName(), epicWithId111.getName());
+        assertEquals(epic.getDescription(), epicWithId111.getDescription());
+        assertEquals(epic.getStatus(), epicWithId111.getStatus());
 
-        assertEquals(subtask.getName(), taskManager.getSubtaskById(999).getName());
-        assertEquals(subtask.getDescription(), taskManager.getSubtaskById(999).getDescription());
-        assertEquals(subtask.getStatus(), taskManager.getSubtaskById(999).getStatus());
+        Subtask subtaskWithId999 = taskManager.getSubtaskById(999).orElseThrow();
+        assertEquals(subtask.getName(), subtaskWithId999.getName());
+        assertEquals(subtask.getDescription(), subtaskWithId999.getDescription());
+        assertEquals(subtask.getStatus(), subtaskWithId999.getStatus());
     }
 
     @Test
@@ -320,9 +339,7 @@ public class TaskManagerTest {
         Task originalTask = getTestTask();
         originalTask.setId(999);
         taskManager.postTask(originalTask);
-
-        Task retrievedTask = taskManager.getTaskById(originalTask.getId());
-
+        Task retrievedTask = taskManager.getTaskById(originalTask.getId()).orElseThrow();
         assertEquals(originalTask.getName(), retrievedTask.getName());
         assertEquals(originalTask.getDescription(), retrievedTask.getDescription());
         assertEquals(originalTask.getStatus(), retrievedTask.getStatus());
@@ -355,21 +372,28 @@ public class TaskManagerTest {
     }
 
     @Test
-    @DisplayName("Проверка всеобъемливающего удаления Subtask")
+    @DisplayName
+            ("Проверка всеобъемливающего удаления Subtask")
     public void checkDeleteSubtasksInAllListAndEpicSubtaskList() {
         Epic epic = getTestEpic();
         taskManager.postEpic(epic);
-        Epic epicInMemory = taskManager.getEpicById(0);
+        Epic epicInMemory = taskManager.getEpicById(0).orElseThrow();
         taskManager.postSubtask(getTestSubtask(epicInMemory));
         taskManager.postSubtask(new Subtask(
                 "Name",
                 "Description",
-                epicInMemory
+                epicInMemory,
+                TaskStatus.NEW,
+                LocalDateTime.now().plusDays(2),
+                Duration.ofMinutes(180)
         ));
         taskManager.postSubtask(new Subtask(
                 "SomeName",
                 "SomeDescription",
-                epicInMemory
+                epicInMemory,
+                TaskStatus.NEW,
+                LocalDateTime.now().plusDays(3),
+                Duration.ofMinutes(1480)
         ));
         assertEquals(taskManager.getSubtasks().size(), 3);
         assertEquals(epicInMemory.getSubtaskArrayList().size(), 3);
@@ -388,17 +412,23 @@ public class TaskManagerTest {
     public void checkStatusEpicWithUpdateAndDeleteHimSubtasks() {
         Epic epic = getTestEpic();
         taskManager.postEpic(epic);
-        Epic epicInMemory = taskManager.getEpicById(0);
+        Epic epicInMemory = taskManager.getEpicById(0).orElseThrow();
         taskManager.postSubtask(getTestSubtask(epicInMemory));
         taskManager.postSubtask(new Subtask(
                 "Name",
                 "Description",
-                epicInMemory
+                epicInMemory,
+                TaskStatus.NEW,
+                LocalDateTime.now().plusDays(7),
+                Duration.ofMinutes(300)
         ));
         taskManager.postSubtask(new Subtask(
                 "SomeName",
                 "SomeDescription",
-                epicInMemory
+                epicInMemory,
+                TaskStatus.NEW,
+                LocalDateTime.now().plusDays(18),
+                Duration.ofMinutes(1480)
         ));
 
         assertEquals(epicInMemory.getStatus(), TaskStatus.NEW);
@@ -420,7 +450,9 @@ public class TaskManagerTest {
                 "Изменённое описание",
                 3,
                 epicInMemory,
-                TaskStatus.IN_PROGRESS
+                TaskStatus.IN_PROGRESS,
+                LocalDateTime.now(),
+                Duration.ofMinutes(60 * 48)
         ));
 
         assertEquals(epicInMemory.getStatus(), TaskStatus.IN_PROGRESS);
@@ -435,7 +467,9 @@ public class TaskManagerTest {
                     "Какое-то описание",
                     i,
                     epicInMemory,
-                    TaskStatus.DONE
+                    TaskStatus.DONE,
+                    LocalDateTime.now(),
+                    Duration.ofMinutes(60 * 5)
             ));
         }
 
@@ -443,12 +477,41 @@ public class TaskManagerTest {
 
     }
 
+    @Test
+    @DisplayName("Проверка корректного наполнения приоритезированного списка tasks")
+    void checkPrioritizedTasksInList() {
+        Task task = getTestTask();
+        Epic someEpic = getTestEpic();
+        taskManager.postTask(task);
+        taskManager.postTask(
+                new Task("Четвёртый по значимости таск", "Описание", TaskStatus.DONE, LocalDateTime.now().plusDays(3), Duration.ofMinutes(60))
+        );
+        taskManager.postTask(
+                new Task("Третий по значимости таск", "Описание", TaskStatus.NEW, LocalDateTime.now().plusDays(2), Duration.ofMinutes(60))
+        );
+        taskManager.postSubtask(
+                new Subtask("Пятый по значимости таск", "Описание", someEpic, TaskStatus.IN_PROGRESS, LocalDateTime.now().plusDays(4), Duration.ofMinutes(60))
+        );
+        taskManager.postTask(
+                new Task("Второй по значимости таск", "Описание", TaskStatus.NEW, LocalDateTime.now().plusDays(1), Duration.ofMinutes(60))
+        );
+        String result = "";
+        for (Task taskInList : taskManager.getPrioritizedTasks()) {
+            result = result.concat(taskInList.getName() + ", ");
+        }
+        assertEquals(
+                result,
+                "Разработка, Второй по значимости таск, Третий по значимости таск, Четвёртый по значимости таск, Пятый по значимости таск, "
+        );
+        taskManager.getPrioritizedTasks().forEach(System.out::println);
+    }
+
     private Task getTestTask() {
-        return new Task("Разработка", "Разработать приложение \"Kanban-доска\"", TaskStatus.NEW);
+        return new Task("Разработка", "Разработать приложение \"Kanban-доска\"", TaskStatus.NEW, LocalDateTime.now(), Duration.ofMinutes(180));
     }
 
     private Subtask getTestSubtask(Epic epic) {
-        return new Subtask("Написание кода", "Написать код", epic);
+        return new Subtask("Написание кода", "Написать код", epic, TaskStatus.NEW, LocalDateTime.now().plusDays(1), Duration.ofMinutes(180));
     }
 
     private Epic getTestEpic() {
