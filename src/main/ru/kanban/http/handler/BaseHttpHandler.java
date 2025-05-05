@@ -8,10 +8,10 @@ import java.nio.charset.StandardCharsets;
 
 public class BaseHttpHandler {
 
-    protected final static String TEXT_405 = "{\"error\":\"Метод не поддерживается\"}";
-    protected final static String TEXT_400 = "{\"error\":\"Некорректный формат ID в пути\"}";
-    protected final static String TEXT_404 = "{\"error\":\"Некорректный путь запроса\"}";
-    protected final static String TEXT_500 = "{\"error\":\"Ошибка сервера: %s\"}";
+    protected static final String TEXT_405 = "{\"error\":\"Метод не поддерживается\"}";
+    protected static final String TEXT_400 = "{\"error\":\"Некорректный формат ID в пути\"}";
+    protected static final String TEXT_404 = "{\"error\":\"Некорректный путь запроса\"}";
+    protected static final String TEXT_500 = "{\"error\":\"Ошибка сервера: %s\"}";
 
     protected void sendText(HttpExchange exchange, String text, int statusCode) throws IOException {
         byte[] response = text.getBytes(StandardCharsets.UTF_8);
