@@ -1,5 +1,6 @@
 package ru.kanban.http.handler;
 
+import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import ru.kanban.entity.Task;
 import ru.kanban.manager.TaskManager;
@@ -10,7 +11,8 @@ import java.util.List;
 public class PrioritizedHandler extends BaseHttpHandler {
     private final TaskManager manager;
 
-    public PrioritizedHandler(TaskManager manager) {
+    public PrioritizedHandler(TaskManager manager, Gson gson) {
+        super(gson);
         this.manager = manager;
     }
 

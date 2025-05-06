@@ -1,5 +1,6 @@
 package ru.kanban.http.handler;
 
+import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import ru.kanban.entity.Epic;
 import ru.kanban.manager.TaskManager;
@@ -12,7 +13,8 @@ import java.util.Optional;
 public class EpicsHandler extends BaseHttpHandler {
     private final TaskManager manager;
 
-    public EpicsHandler(TaskManager manager) {
+    public EpicsHandler(TaskManager manager, Gson gson) {
+        super(gson);
         this.manager = manager;
     }
 
@@ -26,7 +28,7 @@ public class EpicsHandler extends BaseHttpHandler {
     protected void handlePost(HttpExchange exchange) throws IOException {
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         Epic epic = gson.fromJson(body, Epic.class);
-        if (manager.getTaskById(epic.getId()).isPresent()) {
+        if (manager.getEpicById(epic.getId()).isPresent()) {
             manager.updateEpic(epic);
             sendText(exchange, "Task обновлён", 200);
         } else {

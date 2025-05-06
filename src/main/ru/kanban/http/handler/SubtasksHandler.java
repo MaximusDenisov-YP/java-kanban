@@ -1,5 +1,6 @@
 package ru.kanban.http.handler;
 
+import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import ru.kanban.entity.Subtask;
 import ru.kanban.manager.TaskManager;
@@ -13,7 +14,8 @@ import java.util.Optional;
 public class SubtasksHandler extends BaseHttpHandler {
     private final TaskManager manager;
 
-    public SubtasksHandler(TaskManager manager) {
+    public SubtasksHandler(TaskManager manager, Gson gson) {
+        super(gson);
         this.manager = manager;
     }
 
@@ -29,7 +31,7 @@ public class SubtasksHandler extends BaseHttpHandler {
         String json = new String(input.readAllBytes(), StandardCharsets.UTF_8);
         Subtask subtask = gson.fromJson(json, Subtask.class);
         try {
-            if (manager.getTaskById(subtask.getId()).isPresent()) {
+            if (manager.getSubtaskById(subtask.getId()).isPresent()) {
                 manager.updateSubtask(subtask);
                 sendText(exchange, "Subtask обновлён", 200);
             } else {
