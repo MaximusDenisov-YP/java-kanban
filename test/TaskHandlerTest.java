@@ -80,4 +80,5 @@ public class TaskHandlerTest {
         List<Task> tasks = manager.getTasks();
         assertTrue(tasks.isEmpty());
     }
+
 }

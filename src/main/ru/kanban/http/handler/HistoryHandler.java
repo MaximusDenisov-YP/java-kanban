@@ -1,22 +1,17 @@
 package ru.kanban.http.handler;
 
-import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import ru.kanban.entity.Task;
 import ru.kanban.manager.TaskManager;
-import ru.kanban.util.GsonUtil;
 
 import java.io.IOException;
 import java.util.List;
 
-public class HistoryHandler extends BaseHttpHandler implements HttpHandler {
+public class HistoryHandler extends BaseHttpHandler {
     private final TaskManager manager;
-    private final Gson gson;
 
     public HistoryHandler(TaskManager manager) {
         this.manager = manager;
-        this.gson = GsonUtil.getGson(manager);
     }
 
     @Override
@@ -28,11 +23,16 @@ public class HistoryHandler extends BaseHttpHandler implements HttpHandler {
                 response = gson.toJson(history);
                 sendText(exchange, response, 200);
             } else {
-                sendText(exchange, "Метод не поддерживается. Используйте GET", 405);
+                sendMethodNotAllowed(exchange);
             }
         } catch (Exception e) {
             e.printStackTrace();
             sendText(exchange, "{\"error\":\"" + e.getMessage() + "\"}", 500);
         }
+    }
+
+    @Override
+    protected String getPath() {
+        return "history";
     }
 }
